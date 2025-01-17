@@ -23,25 +23,8 @@ export async function fetchProducts({ limit = 5, page = 1, category = '', sort =
   }
 }
 
-export async function fetchProductById(productId) {
-  if (!productId) {
-    throw new Error('Se requiere un ID de producto válido');
-  }
-
-  const endpoint = `${BASE_URL}/products/${productId}`;
-
-  try {
-    const response = await fetch(endpoint);
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Producto no encontrado');
-      }
-      throw new Error('Error en la respuesta de la red');
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error al obtener el producto:', error);
-    throw error;
-  }
+export default function ProductAPI() {
+  return {
+    fetchProducts,
+  };
 }

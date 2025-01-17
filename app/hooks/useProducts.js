@@ -1,48 +1,69 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchProducts } from '../api/index';
 
-export const useProducts = (page, category, sortOrder) => {
+export const useProducts = (category = '', sortOrder = 'default') => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const limit = 5;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
 
-  useEffect(() => {
-    setProducts([]);
-    setHasMore(true);
-  }, [category, sortOrder]);
+  const loadProducts = useCallback(async (currentPage) => {
+    if (!hasMoreProducts && currentPage > 1) return;
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      if (!hasMore) return;
-      
+    try {
       setLoading(true);
-      try {
-        const newProducts = await fetchProducts({
-          limit,
-          page,
-          category: category === 'all' ? '' : category,
-          sort: sortOrder,
-        });
-        
-        if (newProducts.length < limit) {
-          setHasMore(false);
-        }
-
-        if (page === 1) {
-          setProducts(newProducts);
-        } else {
-          setProducts(prev => [...prev, ...newProducts]);
-        }
-      } catch (error) {
-        console.error('Error al cargar productos:', error);
-      } finally {
-        setLoading(false);
+      const fetchedProducts = await fetchProducts({
+        limit: 5,
+        page: currentPage,
+        category,
+        sort: sortOrder
+      });
+      
+      // If no products are returned, we've reached the end
+      if (fetchedProducts.length === 0) {
+        setHasMoreProducts(false);
       }
+
+      setProducts(prevProducts => 
+        currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
+      );
+      setLoading(false);
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+      setHasMoreProducts(false);
+    }
+  }, [category, sortOrder, hasMoreProducts]);
+
+  useEffect(() => {
+    setPage(1);
+    setHasMoreProducts(true);
+    loadProducts(1);
+  }, [category, sortOrder, loadProducts]);
+
+  const loadMore = () => {
+    if (!loading && hasMoreProducts) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadProducts(nextPage);
+    }
+  };
+
+  // Required default export
+  const UseProducts = () => {
+    return {
+      products,
+      loading,
+      error,
+      hasMoreProducts,
+      loadMore
     };
+  };
 
-    loadProducts();
-  }, [page, category, sortOrder, hasMore]);
-
-  return { products, loading, hasMore };
+  return UseProducts;
 };
+
+export default function ProductsHook() {
+  return null;
+}

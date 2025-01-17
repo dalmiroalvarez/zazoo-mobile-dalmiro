@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
-import ProductList from './components/ProductList';
-import CategoryFilter from './components/CategoryFilter';
+import ProductList from '../app/components/ProductList';
+import CategoryFilter from '../app/components/CategoryFilter';
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState('all');

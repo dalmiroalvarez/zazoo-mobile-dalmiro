@@ -1,16 +1,49 @@
-import Colors from '../constants/Colors';
-import useColorScheme from './useColorScheme';
+import { useState, useEffect } from 'react';
+import { useColorScheme } from 'react-native';
 
-export function useThemeColor(
-  props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
-) {
-  const theme = useColorScheme();
-  const colorFromProps = props[theme];
+interface ThemeColors {
+  light: { [key: string]: string };
+  dark: { [key: string]: string };
+}
 
-  if (colorFromProps) {
-    return colorFromProps;
-  } else {
-    return Colors[theme][colorName];
+const colors: ThemeColors = {
+  light: {
+    background: '#ffffff',
+    text: '#000000',
+    primary: '#007AFF',
+    secondary: '#5856D6',
+  },
+  dark: {
+    background: '#000000',
+    text: '#ffffff',
+    primary: '#0A84FF',
+    secondary: '#5E5CE6',
   }
+};
+
+export const useThemeColor = (
+  colorName: keyof typeof colors.light, 
+  fallback?: string
+) => {
+  const colorScheme = useColorScheme();
+  
+  const getColor = () => {
+    const theme = colorScheme || 'light';
+    return colors[theme][colorName] || fallback || colors[theme].text;
+  };
+
+  const [themeColor, setThemeColor] = useState(getColor());
+
+  useEffect(() => {
+    setThemeColor(getColor());
+  }, [colorScheme, colorName]);
+
+  // Required default export
+  const UseThemeColor = () => themeColor;
+
+  return UseThemeColor;
+};
+
+export default function ThemeColorHook() {
+  return null;
 }
